@@ -467,7 +467,6 @@ function viewHome(){
   var h='<div class="hero"><div class="l">시즌 총 지출</div><div class="big">'+won(t.all)+'</div><div class="d">'+chips+'</div></div>';
   var rows=[['🏨 콘도',t.condo],['🎿 강습',t.lesson],['🧤 장비',t.gear],['💳 먹거리·주유·톨비 등',t.exp]];
   h+='<div class="card"><h3>지출 내역</h3>'+rows.map(function(r){var pct=t.all?Math.round(r[1]/t.all*100):0;return '<div class="row"><span>'+r[0]+' <span class="mu">'+pct+'%</span></span><b>'+won(r[1])+'</b></div><div class="prog" style="margin:0 0 4px"><div style="width:'+pct+'%"></div></div>';}).join('')+'</div>';
-  h+='<div class="card"><h3>결제자별</h3>'+PAYERS.map(function(p){return '<div class="row"><span>'+p+'</span><b>'+won(t.payer[p])+'</b></div>';}).join('')+(t.payer['미지정']?'<div class="row mu"><span>미지정</span><b>'+won(t.payer['미지정'])+'</b></div>':'')+'</div>';
   var cancels=S.data.condos.filter(function(c){return c.cancelDate&&c.cancelDate>=today&&c.checkIn>=today;}).sort(function(a,b){return a.cancelDate<b.cancelDate?-1:1;}).slice(0,4);
   if(cancels.length)h+='<div class="card"><h3>⏰ 취소 마감 임박</h3>'+cancels.map(function(c){var n=diffDays(today,c.cancelDate);return '<div class="row"><span>'+esc(c.name)+' <span class="mu">'+mdw(c.checkIn)+' 입실</span></span><b class="'+(n<=3?'warn':'')+'">'+mdw(c.cancelDate)+' '+ddayTxt(c.cancelDate)+'</b></div>';}).join('')+'</div>';
   var ls=S.data.lessons;
