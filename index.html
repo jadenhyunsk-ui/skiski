@@ -180,14 +180,29 @@ var SEED={'2627':{condos:[
 ]}};
 var seeding={};
 function seedSeason(id,meta){
-  if(!SEED[id]||meta.seeded||seeding[id])return;
+  if(!SEED[id]||seeding[id])return;
+  if(meta.seeded&&!meta.payDateFix){migratePayDate(id);return;}
+  if(meta.seeded)return;
   seeding[id]=true;
   var batch=db.batch(),sref=db.collection('seasons').doc(id);
   SEED[id].condos.forEach(function(r){
-    batch.set(sref.collection('condos').doc('r'+r[0]),{id:'r'+r[0],resort:'하이원',name:r[1],room:r[2],size:'',checkIn:r[3],checkOut:r[4],price:r[5],payer:'',memo:'예약번호 '+r[0]+' · 예약확정 · 신용카드 결제'});
+    batch.set(sref.collection('condos').doc('r'+r[0]),{id:'r'+r[0],resort:'하이원',name:r[1],room:r[2],size:'',checkIn:r[3],checkOut:r[4],payDate:'2026-10-26',price:r[5],payer:'',memo:'예약번호 '+r[0]+' · 예약확정 · 신용카드 결제'});
   });
-  batch.set(sref,{seeded:true},{merge:true});
+  batch.set(sref,{seeded:true,payDateFix:true},{merge:true});
   batch.commit().catch(function(e){seeding[id]=false;console.error(e);});
+}
+
+/* 기존 입력값의 결제일/구입일을 2026-10-26으로 한 번만 채움 */
+function migratePayDate(id){
+  seeding[id]=true;
+  var sref=db.collection('seasons').doc(id);
+  Promise.all([sref.collection('condos').get(),sref.collection('lessons').get()]).then(function(r){
+    var batch=db.batch();
+    r[0].docs.forEach(function(d){if(!d.data().payDate)batch.update(d.ref,{payDate:'2026-10-26'});});
+    r[1].docs.forEach(function(d){if(!d.data().date)batch.update(d.ref,{date:'2026-10-26'});});
+    batch.set(sref,{payDateFix:true},{merge:true});
+    return batch.commit();
+  }).catch(function(e){seeding[id]=false;console.error(e);});
 }
 
 function startApp(){
@@ -331,13 +346,13 @@ function condoForm(c){
   var isNew=!c.id;
   openForm({
     title:isNew?'콘도 예약 추가':'콘도 예약',isNew:isNew,
-    data:isNew?Object.assign({id:uid(),resort:'하이원',payer:'른이'},c):c,
+    data:isNew?Object.assign({id:uid(),resort:'하이원',payer:'른이',payDate:todayStr()},c):c,
     fields:[resortField(),
       {k:'name',label:'콘도명',t:'text',ph:'예) 하이원 마운틴콘도'},
       {k:'room',label:'룸타입',t:'text',ph:'예) 디럭스 온돌'},
       {k:'size',label:'평형',t:'text',ph:'예) 24평'},
       {k:'checkIn',label:'체크인',t:'date'},{k:'checkOut',label:'체크아웃',t:'date'},
-      {k:'price',label:'가격(원)',t:'number'},payerField(),
+      {k:'price',label:'가격(원)',t:'number'},{k:'payDate',label:'결제일',t:'date'},payerField(),
       {k:'cancelDate',label:'취소 마감일 (선택, D-day 알림용)',t:'date'},
       {k:'cancelRule',label:'취소 규정',t:'area',ph:'예) 3일 전까지 무료, 이후 50%'},
       {k:'memo',label:'메모 (예약번호 등)',t:'text'}],
@@ -545,7 +560,7 @@ function viewGear(){
 var SP_CATS=['콘도','강습','장비'].concat(EXP_CATS);
 function allSpend(){
   var d=S.data,a=[];
-  d.condos.forEach(function(c){a.push({src:'condos',id:c.id,date:c.checkIn||'',cat:'콘도',title:(c.name||'')+(c.room?' · '+c.room:''),amount:Number(c.price)||0,payer:c.payer,resort:resortName(c)});});
+  d.condos.forEach(function(c){a.push({src:'condos',id:c.id,date:c.payDate||c.checkIn||'',cat:'콘도',title:(c.name||'')+(c.room?' · '+c.room:''),amount:Number(c.price)||0,payer:c.payer,resort:resortName(c)});});
   d.lessons.forEach(function(l){var f=lessonStat(l).logs[0];a.push({src:'lessons',id:l.id,date:l.date||(f?f.date:''),cat:'강습',title:(l.vendor||'')+((l.who||[]).length?' · '+(l.who||[]).map(memberName).join('·'):''),amount:Number(l.price)||0,payer:l.payer,resort:resortName(l)});});
   d.gear.forEach(function(g){a.push({src:'gear',id:g.id,date:g.date||'',cat:'장비',title:'['+(g.type||'')+'] '+(g.item||''),amount:Number(g.amount)||0,payer:g.payer,resort:''});});
   d.expenses.forEach(function(x){a.push({src:'expenses',id:x.id,date:x.date||'',cat:x.cat||'기타',title:x.note||x.cat||'',amount:Number(x.amount)||0,payer:x.payer,resort:resortName(x)});});
@@ -620,7 +635,7 @@ function exportXlsx(){
   function sheet(name,rows){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{'내용':'없음'}]),name);}
   sheet('요약',[{'항목':'콘도','금액':t.condo},{'항목':'강습','금액':t.lesson},{'항목':'장비','금액':t.gear},{'항목':'지출(먹거리 등)','금액':t.exp},{'항목':'총합','금액':t.all},{'항목':'른이 결제','금액':t.payer['른이']},{'항목':'순이 결제','금액':t.payer['순이']}]);
   sheet('전체지출',allSpend().sort(function(a,b){return (a.date||'9')<(b.date||'9')?-1:1;}).map(function(x){return {'날짜':x.date,'카테고리':x.cat,'내용':x.title,'스키장':x.resort,'금액':x.amount,'결제자':x.payer||''};}));
-  sheet('콘도',d.condos.slice().sort(function(a,b){return a.checkIn<b.checkIn?-1:1;}).map(function(c){return {'스키장':resortName(c),'콘도명':c.name,'룸타입':c.room||'','평형':c.size||'','체크인':c.checkIn,'체크아웃':c.checkOut,'박수':diffDays(c.checkIn,c.checkOut),'가격':Number(c.price)||0,'결제자':c.payer||'','취소마감일':c.cancelDate||'','취소규정':c.cancelRule||'','메모':c.memo||''};}));
+  sheet('콘도',d.condos.slice().sort(function(a,b){return a.checkIn<b.checkIn?-1:1;}).map(function(c){return {'스키장':resortName(c),'콘도명':c.name,'룸타입':c.room||'','평형':c.size||'','체크인':c.checkIn,'체크아웃':c.checkOut,'결제일':c.payDate||'','박수':diffDays(c.checkIn,c.checkOut),'가격':Number(c.price)||0,'결제자':c.payer||'','취소마감일':c.cancelDate||'','취소규정':c.cancelRule||'','메모':c.memo||''};}));
   sheet('강습권',d.lessons.map(function(l){var s=lessonStat(l);return {'업체':l.vendor,'스키장':resortName(l),'대상자':(l.who||[]).map(memberName).join(', '),'총횟수':l.total,'사용':s.used,'잔여':s.left,'차감방식':l.mode||'','금액':Number(l.price)||0,'결제자':l.payer||'','메모':l.note||''};}));
   sheet('강습기록',d.logs.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(g){var l=find('lessons',g.lessonId)||{};return {'날짜':g.date,'시간':g.time||'','업체':l.vendor||'','참여자':(g.who||[]).map(memberName).join(', '),'차감횟수':g.count,'메모':g.note||''};}));
   sheet('장비',d.gear.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(x){return {'날짜':x.date,'구분':x.type,'품목':x.item,'금액':Number(x.amount)||0,'결제자':x.payer||'','구입/렌탈처':x.shop||'','메모':x.note||''};}));
