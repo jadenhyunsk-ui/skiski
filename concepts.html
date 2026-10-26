@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>스키 시즌 디자인 컨셉</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:'Malgun Gothic',system-ui,sans-serif;background:#e9edf2;padding:24px;color:#222}
+h1{font-size:20px;margin-bottom:4px}p.sub{color:#667;margin-bottom:20px;font-size:14px}
+.row{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+.wrap{text-align:center}.wrap h2{font-size:16px;margin:0 0 4px}.wrap small{display:block;color:#667;margin-bottom:10px;font-size:12px}
+.phone{width:320px;height:640px;border-radius:34px;border:8px solid #111;overflow:hidden;position:relative;text-align:left;background:var(--bg);color:var(--tx);box-shadow:0 10px 30px #0003}
+.scroll{height:100%;overflow:hidden;padding:14px 14px 70px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.season{font-weight:800;font-size:18px}.chip{background:var(--card);border-radius:20px;padding:5px 11px;font-size:12px;font-weight:700;color:var(--ac)}
+.hero{background:var(--hero);color:var(--herotx);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.hero .l{font-size:12px;opacity:.85}.hero .big{font-size:26px;font-weight:800;margin:2px 0 8px}
+.hero .d{display:flex;gap:8px;font-size:12px}.hero .d span{background:#ffffff30;border-radius:12px;padding:4px 9px}
+.card{background:var(--card);border-radius:var(--r);padding:12px;margin-bottom:10px;box-shadow:var(--sh)}
+.card h3{font-size:13px;margin-bottom:8px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:10px;text-align:center}
+.cal b{color:var(--mu);font-weight:600}.cal i{font-style:normal;padding:3px 0;position:relative;height:30px}
+.bar{position:absolute;left:0;right:0;bottom:1px;height:12px;background:var(--ac);color:#fff;font-size:8px;line-height:12px;overflow:hidden;white-space:nowrap}
+.bar.s{border-radius:8px 0 0 8px;left:2px}.bar.e{border-radius:0 8px 8px 0;right:2px}
+.bar.b2{background:var(--ac2)}
+.prog{height:8px;border-radius:6px;background:var(--bg);overflow:hidden;margin:4px 0 8px}.prog div{height:100%;background:var(--ac2);width:60%}
+.li{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}.li span:last-child{font-weight:700}
+.tab{position:absolute;bottom:0;left:0;right:0;height:58px;background:var(--card);display:flex;justify-content:space-around;align-items:center;font-size:10px;color:var(--mu);border-top:1px solid #0001}
+.tab div{text-align:center}.tab .on{color:var(--ac);font-weight:800}.tab em{display:block;font-size:17px;font-style:normal}
+.A{--bg:#eef6fb;--card:#fff;--tx:#12304a;--mu:#8aa0b2;--ac:#2f8fe0;--ac2:#27c2a0;--hero:linear-gradient(135deg,#4aa8f0,#1f6fc0);--herotx:#fff;--r:18px;--sh:0 2px 8px #1f6fc015}
+.B{--bg:#0e1626;--card:#18233a;--tx:#e8eefb;--mu:#7587a6;--ac:#31d0e6;--ac2:#ff9f43;--hero:linear-gradient(135deg,#243b6b,#5b3fa8);--herotx:#fff;--r:16px;--sh:none}
+.C{--bg:#f6f0e4;--card:#fffaf0;--tx:#2f3a2c;--mu:#a09478;--ac:#2f6b4a;--ac2:#c8553d;--hero:linear-gradient(135deg,#2f6b4a,#1f4a33);--herotx:#fbf3df;--r:12px;--sh:0 1px 0 #0001}
+</style></head><body>
+<h1>스키 시즌 앱 – 디자인 컨셉</h1>
+<p class="sub">공통: 여행앱처럼 상단 시즌 선택 + 하단 탭바(홈/콘도/강습/장비/지출). 마음에 드는 컨셉을 골라주세요.</p>
+<div class="row" id="r"></div>
+<script>
+const items=[['A','A. 파우더 스노우','밝은 설원, 하늘색·민트. 깔끔한 여행앱 느낌'],
+['B','B. 나이트 슬로프','야간 스키 느낌 다크 모드. 청록·주황 포인트'],
+['C','C. 알파인 로지','따뜻한 크림 + 숲 초록. 아늑한 산장 느낌']];
+const cal=()=>{let h='';['일','월','화','수','목','금','토'].forEach(d=>h+=`<b>${d}</b>`);
+for(let i=1;i<=14;i++){let bar='';
+ if(i==5)bar='<div class="bar s">하이원</div>';if(i==6)bar='<div class="bar e"></div>';
+ if(i==12)bar='<div class="bar b2 s">웰리힐리</div>';if(i==13)bar='<div class="bar b2 e"></div>';
+ h+=`<i>${i}${bar}</i>`}return h};
+document.getElementById('r').innerHTML=items.map(([k,t,d])=>`<div class="wrap"><h2>${t}</h2><small>${d}</small>
+<div class="phone ${k}"><div class="scroll">
+<div class="top"><div class="season">2627 시즌 ▾</div><div class="chip">른이 · 순이</div></div>
+<div class="hero"><div class="l">시즌 총 지출</div><div class="big">1,842,000원</div><div class="d"><span>다음 여행 D-12</span><span>하이원 2박3일</span></div></div>
+<div class="card"><h3>🏨 콘도 달력 · 12월</h3><div class="cal">${cal()}</div></div>
+<div class="card"><h3>🎿 강습 잔여</h3><div class="li"><span>OO스쿨 (아이A·B 공유)</span><span>6/10회</span></div><div class="prog"><div></div></div>
+<div class="li"><span>🍜 먹거리</span><span>128,000원</span></div><div class="li"><span>⛽ 주유·톨비</span><span>96,500원</span></div></div>
+</div><div class="tab"><div class="on"><em>🏠</em>홈</div><div><em>🏨</em>콘도</div><div><em>🎿</em>강습</div><div><em>🧤</em>장비</div><div><em>💳</em>지출</div></div></div></div>`).join('');
+</script></body></html>

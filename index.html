@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f8fe0">
+<title>스키 시즌 노트</title>
+<style>
+:root{--bg:#eef6fb;--card:#fff;--tx:#12304a;--mu:#8aa0b2;--ac:#2f8fe0;--ac2:#27c2a0;--warn:#e5594f;--line:#e1ebf2;--r:18px;--sh:0 2px 8px #1f6fc015;
+--c-하이원:#2f8fe0;--c-웰리힐리:#27b28a;--c-용평:#f08a3c;--c-수기입력:#8a7fd1}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.4}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+#app{max-width:640px;margin:0 auto;min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 14px 90px}
+.hidden{display:none!important}
+/* login */
+#login{position:fixed;inset:0;background:linear-gradient(160deg,#4aa8f0,#1f6fc0);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.lcard{background:#fff;border-radius:22px;padding:26px 22px;width:100%;max-width:340px}
+.lcard h2{font-size:20px;margin-bottom:4px}.lcard p{color:var(--mu);font-size:13px;margin-bottom:16px}
+.lcard label{display:block;font-size:12px;color:var(--mu);margin:10px 0 4px}
+.lcard input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#f7fbfe}
+.lcard button{width:100%;margin-top:16px;padding:12px;border-radius:12px;background:var(--ac);color:#fff;font-weight:700}
+.lerr{color:var(--warn);font-size:12px;margin-top:10px;min-height:16px}
+/* top */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.seasonsel{position:relative;font-weight:800;font-size:20px;display:flex;align-items:center;gap:4px}
+.seasonsel select{appearance:none;border:0;background:transparent;font-weight:800;font-size:20px;padding-right:18px;cursor:pointer;color:var(--tx)}
+.seasonsel:after{content:'▾';position:absolute;right:0;pointer-events:none;color:var(--ac)}
+.iconbtn{width:36px;height:36px;border-radius:50%;background:var(--card);box-shadow:var(--sh);font-size:17px}
+/* common */
+.hero{background:linear-gradient(135deg,#4aa8f0,#1f6fc0);color:#fff;border-radius:var(--r);padding:18px;margin-bottom:12px}
+.hero .l{font-size:12px;opacity:.85}.hero .big{font-size:30px;font-weight:800;margin:2px 0 10px}
+.hero .d{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}.hero .d span{background:#ffffff30;border-radius:12px;padding:4px 10px}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
+.card h3{font-size:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card h3 small{color:var(--mu);font-weight:400;font-size:12px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13px}.row b{font-weight:700;white-space:nowrap}
+.mu{color:var(--mu)}.warn{color:var(--warn)}
+.prog{height:8px;border-radius:6px;background:var(--bg);overflow:hidden;margin:4px 0 8px}.prog div{height:100%;background:var(--ac2);border-radius:6px}
+.chip{display:inline-block;padding:3px 10px;border-radius:14px;background:var(--bg);font-size:12px;font-weight:600;margin:0 4px 4px 0;color:var(--ac)}
+.chip.rs{color:#fff}
+.empty{text-align:center;color:var(--mu);padding:22px 0;font-size:13px}
+.btn{padding:10px 16px;border-radius:12px;background:var(--ac);color:#fff;font-weight:700}
+.btn.sub{background:var(--bg);color:var(--ac)}.btn.red{background:#fdecea;color:var(--warn)}
+.fab{position:fixed;right:max(16px,calc(50vw - 304px));bottom:76px;width:54px;height:54px;border-radius:50%;background:var(--ac);color:#fff;font-size:28px;box-shadow:0 4px 14px #1f6fc050;z-index:10}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.item:first-of-type{border-top:0}.item .r{text-align:right;white-space:nowrap}
+.item .t{font-weight:700}.item .s{color:var(--mu);font-size:12px;margin-top:2px}
+.pills{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+.pills button{flex:none;padding:7px 14px;border-radius:18px;background:var(--card);box-shadow:var(--sh);font-weight:600;color:var(--mu)}
+.pills button.on{background:var(--ac);color:#fff}
+.sum3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sum3 div{background:var(--card);border-radius:14px;padding:10px;box-shadow:var(--sh);text-align:center}
+.sum3 small{display:block;color:var(--mu);font-size:11px}.sum3 b{font-size:14px}
+/* nav */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+nav .in{display:flex;width:100%;max-width:640px}
+nav button{flex:1;padding:8px 0 7px;font-size:10px;color:var(--mu)}nav button em{display:block;font-size:19px;font-style:normal}
+nav button.on{color:var(--ac);font-weight:800}
+/* calendar */
+.cal{background:var(--card);border-radius:var(--r);padding:8px 6px 10px;box-shadow:var(--sh);margin-bottom:12px}
+.dow,.week{display:grid;grid-template-columns:repeat(7,1fr)}
+.dow div{text-align:center;font-size:11px;color:var(--mu);padding:4px 0}
+.week{grid-template-rows:22px repeat(3,17px) 3px;border-top:1px solid var(--line)}
+.day{grid-row:1/span 5;position:relative;padding:3px 4px;font-size:11px;cursor:pointer}
+.day.out{color:#bfcddb}.day.sun{color:var(--warn)}.day.sat{color:var(--ac)}.day.out.sun,.day.out.sat{opacity:.5}
+.day.today span{background:var(--ac);color:#fff;border-radius:10px;padding:1px 5px}
+.day em{position:absolute;right:3px;top:4px;font-style:normal;font-size:9px;color:var(--mu)}
+.bar{z-index:2;margin:1px 1px 0;border-radius:4px;color:#fff;font-size:10px;line-height:15px;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;font-weight:600}
+.bar.cl{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0}
+.bar.cr{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0}
+.calhead{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 6px;font-weight:800;font-size:16px}
+/* modal */
+#modal{position:fixed;inset:0;background:#0b1b2b66;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px)}
+.sheet h2{font-size:17px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.sheet h2 button{font-size:22px;color:var(--mu)}
+.f{margin-bottom:12px}.f label{display:block;font-size:12px;color:var(--mu);margin-bottom:4px}
+.f input,.f select,.f textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#f7fbfe}
+.f textarea{min-height:60px;resize:vertical}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:8px 13px;border-radius:12px;background:var(--bg);color:var(--mu);font-weight:600}
+.seg button.on{background:var(--ac);color:#fff}
+.acts{display:flex;gap:8px;margin-top:6px}.acts .btn{flex:1}
+.stat{font-size:12px;color:var(--ac2);min-height:16px;margin-top:8px;text-align:center}.stat.e{color:var(--warn)}
+</style>
+</head>
+<body>
+<div id="login">
+  <form class="lcard" id="lform">
+    <h2>🎿 스키 시즌 노트</h2>
+    <p>가족 로그인 후 이용할 수 있어요</p>
+    <label for="lemail">이메일</label><input type="email" id="lemail" required autocomplete="username">
+    <label for="lpw">비밀번호</label><input type="password" id="lpw" required autocomplete="current-password">
+    <button type="submit" id="lbtn">로그인</button>
+    <div class="lerr" id="lerr"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top">
+    <div class="seasonsel"><select id="seasonSel"></select></div>
+    <button class="iconbtn" id="menuBtn" aria-label="메뉴">⚙️</button>
+  </div>
+  <div id="view"></div>
+</div>
+<nav class="hidden" id="nav"><div class="in">
+  <button data-t="home"><em>🏠</em>홈</button>
+  <button data-t="condo"><em>🏨</em>콘도</button>
+  <button data-t="lesson"><em>🎿</em>강습</button>
+  <button data-t="gear"><em>🧤</em>장비</button>
+  <button data-t="exp"><em>💳</em>지출</button>
+</div></nav>
+<div id="modal" class="hidden"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===== Firebase ===== */
+var firebaseConfig={
+  apiKey:"AIzaSyCBmXS4-ezpuxwV0piDAiaA_ZjR0T7EhTA",
+  authDomain:"skiski-25295.firebaseapp.com",
+  projectId:"skiski-25295",
+  storageBucket:"skiski-25295.firebasestorage.app",
+  messagingSenderId:"359568461868",
+  appId:"1:359568461868:web:6f9213a651a0d5e4e98189"
+};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+
+/* ===== 상수 / 상태 ===== */
+var RESORTS=['하이원','웰리힐리','용평','수기입력'];
+var PAYERS=['른이','순이'];
+var GEAR_TYPES=['구입','렌탈','수리','기타'];
+var EXP_CATS=['먹거리','주유비','톨비','주차','리프트권','기타'];
+var MODES=['회차당 1회 차감','인원당 1회 차감'];
+var COLS=['condos','lessons','logs','members','gear','expenses'];
+var S={season:null,seasons:[],data:{},tab:'home',cal:null,expCat:'전체',unsubs:[],unsubSeasons:null};
+COLS.forEach(function(c){S.data[c]=[];});
+
+/* ===== 유틸 ===== */
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function won(n){return (Number(n)||0).toLocaleString('ko-KR')+'원';}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function sum(a,k){return a.reduce(function(s,x){return s+(Number(x[k])||0);},0);}
+function pms(s){var p=s.split('-').map(Number);return Date.UTC(p[0],p[1]-1,p[2]);}
+function fromMs(ms){return new Date(ms).toISOString().slice(0,10);}
+function addDays(s,n){return fromMs(pms(s)+n*864e5);}
+function diffDays(a,b){return Math.round((pms(b)-pms(a))/864e5);}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+var DOW=['일','월','화','수','목','금','토'];
+function md(s){return s?Number(s.slice(5,7))+'/'+Number(s.slice(8,10)):'';}
+function mdw(s){return s?md(s)+'('+DOW[new Date(pms(s)).getUTCDay()]+')':'';}
+function ddayTxt(s){var n=diffDays(todayStr(),s);return n===0?'D-Day':n>0?'D-'+n:'D+'+(-n);}
+function resortName(o){return o.resort==='수기입력'?(o.resortEtc||'수기입력'):(o.resort||'');}
+function resortChip(o){return '<span class="chip rs" style="background:var(--c-'+(o.resort||'수기입력')+')">'+esc(resortName(o))+'</span>';}
+function nightsTxt(n){return n+'박'+(n+1)+'일';}
+function seasonYear(){return 2000+Number(S.season.slice(0,2));}
+function members(activeOnly){return S.data.members.slice().sort(function(a,b){return (a.ord||0)-(b.ord||0);}).filter(function(m){return !activeOnly||m.active!==false;});}
+function memberName(id){var m=S.data.members.filter(function(x){return x.id===id;})[0];return m?m.name:'(삭제됨)';}
+
+/* ===== Firestore ===== */
+function colRef(c){return db.collection('seasons').doc(S.season).collection(c);}
+function saveDoc(c,o){return colRef(c).doc(o.id).set(o).catch(function(e){console.error(e);alert('저장 실패: '+e.message);});}
+function delDoc(c,id){return colRef(c).doc(id).delete().catch(function(e){console.error(e);alert('삭제 실패: '+e.message);});}
+
+function defaultSeasonName(){var d=new Date(),y=d.getFullYear()%100;if(d.getMonth()<6)y-=1;return String(y).padStart(2,'0')+String(y+1).padStart(2,'0');}
+
+function startApp(){
+  S.unsubSeasons=db.collection('seasons').onSnapshot(function(snap){
+    S.seasons=snap.docs.map(function(d){return d.id;}).sort();
+    if(!S.seasons.length){db.collection('seasons').doc(defaultSeasonName()).set({name:defaultSeasonName(),created:Date.now()});return;}
+    var saved=null;try{saved=localStorage.getItem('skiski.season');}catch(e){}
+    var want=S.season&&S.seasons.indexOf(S.season)>=0?S.season:(S.seasons.indexOf(saved)>=0?saved:S.seasons[S.seasons.length-1]);
+    if(want!==S.season)switchSeason(want);else renderSeasonSel();
+  },function(e){console.error(e);alert('DB 연결 실패: '+e.message);});
+}
+function stopApp(){
+  if(S.unsubSeasons)S.unsubSeasons();S.unsubSeasons=null;
+  S.unsubs.forEach(function(u){u();});S.unsubs=[];S.season=null;
+}
+function switchSeason(id){
+  S.unsubs.forEach(function(u){u();});S.unsubs=[];
+  S.season=id;S.cal=null;S.expCat='전체';
+  try{localStorage.setItem('skiski.season',id);}catch(e){}
+  COLS.forEach(function(c){
+    S.data[c]=[];
+    S.unsubs.push(colRef(c).onSnapshot(function(snap){
+      S.data[c]=snap.docs.map(function(d){var o=d.data();o.id=d.id;return o;});
+      scheduleRender();
+    },function(e){console.error(e);}));
+  });
+  renderSeasonSel();render();
+}
+function renderSeasonSel(){
+  $('#seasonSel').innerHTML=S.seasons.map(function(s){return '<option value="'+s+'"'+(s===S.season?' selected':'')+'>'+s+' 시즌</option>';}).join('');
+}
+var rq=0;function scheduleRender(){if(rq)return;rq=requestAnimationFrame(function(){rq=0;render();});}
+
+/* ===== 폼 엔진 (기존 항목은 입력 즉시 자동 저장) ===== */
+function closeModal(){var m=$('#modal');m.classList.add('hidden');m.innerHTML='';}
+function openSheet(html){var m=$('#modal');m.innerHTML='<div class="sheet">'+html+'</div>';m.classList.remove('hidden');return m.firstChild;}
+$('#modal').addEventListener('click',function(e){if(e.target.id==='modal')closeModal();});
+
+function openForm(o){
+  var val=JSON.parse(JSON.stringify(o.data||{}));
+  var isNew=!!o.isNew,timer=null,statTxt='',statErr=false;
+  var sheet=openSheet('');
+  function fieldHtml(f){
+    var k=f.k,h='<div class="f"><label>'+esc(f.label)+'</label>';
+    if(f.t==='seg'){
+      h+='<div class="seg" data-k="'+k+'">'+f.opts.map(function(x){return '<button type="button" data-v="'+esc(x)+'" class="'+(val[k]===x?'on':'')+'">'+esc(x)+'</button>';}).join('')+'</div>';
+    }else if(f.t==='resort'){
+      h+='<div class="seg" data-k="resort">'+RESORTS.map(function(x){return '<button type="button" data-v="'+x+'" class="'+(val.resort===x?'on':'')+'">'+x+'</button>';}).join('')+'</div>';
+      if(val.resort==='수기입력')h+='<input style="margin-top:8px" data-k="resortEtc" placeholder="스키장 이름" value="'+esc(val.resortEtc||'')+'">';
+    }else if(f.t==='chips'){
+      h+='<div class="seg" data-k="'+k+'" data-multi="1">'+(f.opts.length?f.opts.map(function(x){return '<button type="button" data-v="'+esc(x.v)+'" class="'+((val[k]||[]).indexOf(x.v)>=0?'on':'')+'">'+esc(x.l)+'</button>';}).join(''):'<span class="mu">'+esc(f.empty||'선택지가 없어요')+'</span>')+'</div>';
+    }else if(f.t==='area'){
+      h+='<textarea data-k="'+k+'" placeholder="'+esc(f.ph||'')+'">'+esc(val[k]||'')+'</textarea>';
+    }else{
+      var type=f.t==='number'?'number':f.t;
+      h+='<input data-k="'+k+'" type="'+type+'"'+(f.t==='number'?' inputmode="numeric"':'')+' placeholder="'+esc(f.ph||'')+'" value="'+esc(val[k]==null?'':val[k])+'">';
+    }
+    return h+'</div>';
+  }
+  function render(){
+    var st=sheet.scrollTop;
+    sheet.innerHTML='<h2>'+esc(o.title)+'<button type="button" data-x="close">×</button></h2>'+
+      o.fields.map(fieldHtml).join('')+
+      '<div class="acts">'+(isNew?'<button type="button" class="btn" data-x="add">추가</button>':'<button type="button" class="btn red" data-x="del">삭제</button><button type="button" class="btn sub" data-x="close">닫기</button>')+'</div>'+
+      '<div class="stat'+(statErr?' e':'')+'">'+esc(isNew?'':(statTxt||'입력하면 바로 저장돼요'))+'</div>';
+    sheet.scrollTop=st;
+  }
+  function flush(){
+    if(!timer)return;clearTimeout(timer);timer=null;
+    var err=o.valid?o.valid(val):'';if(!err)o.onSave(val);
+  }
+  function auto(){
+    if(isNew)return;clearTimeout(timer);
+    timer=setTimeout(function(){
+      timer=null;var err=o.valid?o.valid(val):'';
+      statErr=!!err;statTxt=err?('⚠ '+err):'저장됨 ✓';
+      if(!err)o.onSave(val);
+      var s=$('.stat',sheet);if(s){s.textContent=statTxt;s.className='stat'+(statErr?' e':'');}
+    },500);
+  }
+  function changed(k){
+    var rerender=false;
+    if(o.onChange&&o.onChange(k,val))rerender=true;
+    return rerender;
+  }
+  sheet.addEventListener('input',function(e){
+    var k=e.target.dataset.k;if(!k)return;
+    val[k]=e.target.type==='number'?(e.target.value===''?'':Number(e.target.value)):e.target.value;
+    if(e.target.type==='date'||e.target.type==='time')return; // change 이벤트에서 처리
+    if(changed(k))render();auto();
+  });
+  sheet.addEventListener('change',function(e){
+    var k=e.target.dataset.k;if(!k||(e.target.type!=='date'&&e.target.type!=='time'))return;
+    val[k]=e.target.value;if(changed(k))render();auto();
+  });
+  sheet.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    var seg=b.closest('.seg');
+    if(seg){
+      var k=seg.dataset.k,v=b.dataset.v;
+      if(seg.dataset.multi){var a=val[k]||[],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);val[k]=a;}
+      else val[k]=v;
+      changed(k);render();auto();return;
+    }
+    var x=b.dataset.x;
+    if(x==='close'){flush();closeModal();}
+    else if(x==='add'){
+      var err=o.valid?o.valid(val):'';
+      if(err){statErr=true;statTxt='⚠ '+err;var s=$('.stat',sheet);s.textContent=statTxt;s.className='stat e';return;}
+      o.onSave(val);closeModal();
+    }else if(x==='del'){
+      if(confirm('삭제할까요?')){clearTimeout(timer);timer=null;o.onDelete(val);closeModal();}
+    }
+  });
+  render();
+}
+
+/* ===== 콘도 그룹핑 (같은 콘도 연박 합치기) ===== */
+function groupCondos(list){
+  var by={};
+  list.forEach(function(c){if(!c.checkIn||!c.checkOut)return;var k=resortName(c)+'|'+(c.name||'').trim();(by[k]=by[k]||[]).push(c);});
+  var out=[];
+  Object.keys(by).forEach(function(k){
+    var arr=by[k].sort(function(a,b){return a.checkIn<b.checkIn?-1:a.checkIn>b.checkIn?1:0;}),cur=null;
+    arr.forEach(function(c){
+      if(cur&&c.checkIn<=cur.end){cur.items.push(c);if(c.checkOut>cur.end)cur.end=c.checkOut;}
+      else{cur={name:(c.name||'').trim(),resort:c.resort,resortEtc:c.resortEtc,start:c.checkIn,end:c.checkOut,items:[c]};out.push(cur);}
+    });
+  });
+  out.forEach(function(g){g.nights=diffDays(g.start,g.end);g.price=sum(g.items,'price');});
+  return out.sort(function(a,b){return a.start<b.start?-1:a.start>b.start?1:0;});
+}
+
+/* ===== 폼 정의 ===== */
+function payerField(){return {k:'payer',label:'결제자',t:'seg',opts:PAYERS};}
+function resortField(){return {k:'resort',label:'스키장',t:'resort'};}
+function needResort(v){return v.resort==='수기입력'&&!(v.resortEtc||'').trim()?'스키장 이름을 입력하세요':'';}
+
+function condoForm(c){
+  var isNew=!c.id;
+  openForm({
+    title:isNew?'콘도 예약 추가':'콘도 예약',isNew:isNew,
+    data:isNew?Object.assign({id:uid(),resort:'하이원',payer:'른이'},c):c,
+    fields:[resortField(),
+      {k:'name',label:'콘도명',t:'text',ph:'예) 하이원 마운틴콘도'},
+      {k:'room',label:'룸타입',t:'text',ph:'예) 디럭스 온돌'},
+      {k:'size',label:'평형',t:'text',ph:'예) 24평'},
+      {k:'checkIn',label:'체크인',t:'date'},{k:'checkOut',label:'체크아웃',t:'date'},
+      {k:'price',label:'가격(원)',t:'number'},payerField(),
+      {k:'cancelDate',label:'취소 마감일 (선택, D-day 알림용)',t:'date'},
+      {k:'cancelRule',label:'취소 규정',t:'area',ph:'예) 3일 전까지 무료, 이후 50%'}],
+    valid:function(v){return !(v.name||'').trim()?'콘도명을 입력하세요':needResort(v)||(!v.checkIn?'체크인 날짜를 입력하세요':!v.checkOut?'체크아웃 날짜를 입력하세요':v.checkOut<=v.checkIn?'체크아웃은 체크인 이후여야 해요':'');},
+    onChange:function(k,v){if(k==='checkIn'&&v.checkIn&&(!v.checkOut||v.checkOut<=v.checkIn)){v.checkOut=addDays(v.checkIn,1);return true;}return false;},
+    onSave:function(v){saveDoc('condos',v);},
+    onDelete:function(v){delDoc('condos',v.id);}
+  });
+}
+function memberForm(m){
+  var isNew=!m.id;
+  openForm({
+    title:isNew?'대상자 추가':'대상자',isNew:isNew,
+    data:isNew?{id:uid(),ord:Date.now(),active:true}:Object.assign({activeTxt:m.active===false?'제외':'사용중'},m),
+    fields:[{k:'name',label:'이름',t:'text'}].concat(isNew?[]:[{k:'activeTxt',label:'이번 시즌',t:'seg',opts:['사용중','제외']}]),
+    valid:function(v){return !(v.name||'').trim()?'이름을 입력하세요':'';},
+    onChange:function(k,v){if(k==='activeTxt')v.active=v.activeTxt!=='제외';return false;},
+    onSave:function(v){var o=Object.assign({},v);delete o.activeTxt;o.active=o.active!==false;saveDoc('members',o);},
+    onDelete:function(v){delDoc('members',v.id);}
+  });
+}
+function lessonForm(l){
+  var isNew=!l.id;
+  var opts=members(false).filter(function(m){return m.active!==false||(l.who||[]).indexOf(m.id)>=0;}).map(function(m){return {v:m.id,l:m.name};});
+  openForm({
+    title:isNew?'강습권 추가':'강습권',isNew:isNew,
+    data:isNew?{id:uid(),resort:'하이원',payer:'른이',mode:MODES[0],who:[],total:10}:l,
+    fields:[{k:'vendor',label:'강습업체',t:'text',ph:'예) OO스키스쿨'},
+      {k:'who',label:'대상자 (나눠 쓰면 여러 명 선택)',t:'chips',opts:opts,empty:'먼저 대상자를 추가하세요'},
+      {k:'total',label:'총 횟수',t:'number'},
+      {k:'mode',label:'횟수 차감 방식',t:'seg',opts:MODES},
+      {k:'price',label:'금액(원)',t:'number'},payerField(),resortField(),
+      {k:'note',label:'메모',t:'area'}],
+    valid:function(v){return !(v.vendor||'').trim()?'강습업체를 입력하세요':!(Number(v.total)>0)?'총 횟수를 입력하세요':needResort(v);},
+    onSave:function(v){saveDoc('lessons',v);},
+    onDelete:function(v){S.data.logs.filter(function(g){return g.lessonId===v.id;}).forEach(function(g){delDoc('logs',g.id);});delDoc('lessons',v.id);}
+  });
+}
+function logForm(g,lesson){
+  var isNew=!g.id,touched=!isNew;
+  var opts=(lesson.who||[]).map(function(id){return {v:id,l:memberName(id)};});
+  function auto(v){return lesson.mode===MODES[1]?Math.max(1,(v.who||[]).length):1;}
+  var data=isNew?{id:uid(),lessonId:lesson.id,date:todayStr(),time:'',who:[],count:1}:g;
+  if(isNew)data.count=auto(data);
+  openForm({
+    title:(isNew?'수강 기록 추가':'수강 기록')+' · '+lesson.vendor,isNew:isNew,data:data,
+    fields:[{k:'date',label:'날짜',t:'date'},{k:'time',label:'시간',t:'text',ph:'예) 09:00~11:00'},
+      {k:'who',label:'참여자',t:'chips',opts:opts,empty:'강습권에 대상자가 없어요'},
+      {k:'count',label:'차감 횟수 (자동 계산, 직접 수정 가능)',t:'number'},
+      {k:'note',label:'메모',t:'text'}],
+    valid:function(v){return !v.date?'날짜를 입력하세요':!(Number(v.count)>0)?'차감 횟수를 입력하세요':'';},
+    onChange:function(k,v){if(k==='count'){touched=true;return false;}if(k==='who'&&!touched){v.count=auto(v);return true;}return false;},
+    onSave:function(v){saveDoc('logs',v);},
+    onDelete:function(v){delDoc('logs',v.id);}
+  });
+}
+function gearForm(x){
+  var isNew=!x.id;
+  openForm({
+    title:isNew?'장비 내역 추가':'장비 내역',isNew:isNew,
+    data:isNew?{id:uid(),type:'구입',payer:'른이',date:todayStr()}:x,
+    fields:[{k:'type',label:'구분',t:'seg',opts:GEAR_TYPES},{k:'item',label:'품목',t:'text',ph:'예) 스키 부츠'},
+      {k:'date',label:'날짜',t:'date'},{k:'amount',label:'금액(원)',t:'number'},payerField(),
+      {k:'shop',label:'구입/렌탈처',t:'text'},{k:'note',label:'메모',t:'area'}],
+    valid:function(v){return !(v.item||'').trim()?'품목을 입력하세요':!v.date?'날짜를 입력하세요':'';},
+    onSave:function(v){saveDoc('gear',v);},onDelete:function(v){delDoc('gear',v.id);}
+  });
+}
+function expForm(x){
+  var isNew=!x.id;
+  openForm({
+    title:isNew?'지출 추가':'지출',isNew:isNew,
+    data:isNew?{id:uid(),cat:'먹거리',payer:'른이',resort:'하이원',date:todayStr()}:x,
+    fields:[{k:'cat',label:'항목',t:'seg',opts:EXP_CATS},{k:'date',label:'날짜',t:'date'},
+      {k:'amount',label:'금액(원)',t:'number'},payerField(),resortField(),{k:'note',label:'메모',t:'text',ph:'예) 점심 돈까스'}],
+    valid:function(v){return !(Number(v.amount)>0)?'금액을 입력하세요':!v.date?'날짜를 입력하세요':needResort(v);},
+    onSave:function(v){saveDoc('expenses',v);},onDelete:function(v){delDoc('expenses',v.id);}
+  });
+}
+
+/* ===== 강습 집계 ===== */
+function lessonStat(l){
+  var logs=S.data.logs.filter(function(g){return g.lessonId===l.id;}).sort(function(a,b){return (a.date+(a.time||''))<(b.date+(b.time||''))?-1:1;});
+  var used=sum(logs,'count'),per={};
+  logs.forEach(function(g){(g.who||[]).forEach(function(id){per[id]=(per[id]||0)+1;});});
+  return {logs:logs,used:used,left:(Number(l.total)||0)-used,per:per};
+}
+
+/* ===== 뷰 ===== */
+function render(){
+  if(!S.season)return;
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on',b.dataset.t===S.tab);});
+  var v=$('#view');
+  v.innerHTML={home:viewHome,condo:viewCondo,lesson:viewLesson,gear:viewGear,exp:viewExp}[S.tab]();
+}
+
+function totals(){
+  var d=S.data,t={condo:sum(d.condos,'price'),lesson:sum(d.lessons,'price'),gear:sum(d.gear,'amount'),exp:sum(d.expenses,'amount')};
+  t.all=t.condo+t.lesson+t.gear+t.exp;
+  var p={'른이':0,'순이':0,'미지정':0};
+  function add(a,k){a.forEach(function(x){var n=PAYERS.indexOf(x.payer)>=0?x.payer:'미지정';p[n]+=Number(x[k])||0;});}
+  add(d.condos,'price');add(d.lessons,'price');add(d.gear,'amount');add(d.expenses,'amount');
+  t.payer=p;return t;
+}
+
+function viewHome(){
+  var t=totals(),today=todayStr(),groups=groupCondos(S.data.condos);
+  var next=groups.filter(function(g){return g.end>=today;})[0];
+  var chips='';
+  if(next)chips+='<span>'+(next.start<=today?'숙박 중':'다음 여행 '+ddayTxt(next.start))+'</span><span>'+esc(next.name)+' '+nightsTxt(next.nights)+'</span>';
+  else chips+='<span>예정된 숙박이 없어요</span>';
+  var h='<div class="hero"><div class="l">시즌 총 지출</div><div class="big">'+won(t.all)+'</div><div class="d">'+chips+'</div></div>';
+  var rows=[['🏨 콘도',t.condo],['🎿 강습',t.lesson],['🧤 장비',t.gear],['💳 먹거리·주유·톨비 등',t.exp]];
+  h+='<div class="card"><h3>지출 내역</h3>'+rows.map(function(r){var pct=t.all?Math.round(r[1]/t.all*100):0;return '<div class="row"><span>'+r[0]+' <span class="mu">'+pct+'%</span></span><b>'+won(r[1])+'</b></div><div class="prog" style="margin:0 0 4px"><div style="width:'+pct+'%"></div></div>';}).join('')+'</div>';
+  h+='<div class="card"><h3>결제자별</h3>'+PAYERS.map(function(p){return '<div class="row"><span>'+p+'</span><b>'+won(t.payer[p])+'</b></div>';}).join('')+(t.payer['미지정']?'<div class="row mu"><span>미지정</span><b>'+won(t.payer['미지정'])+'</b></div>':'')+'</div>';
+  var cancels=S.data.condos.filter(function(c){return c.cancelDate&&c.cancelDate>=today&&c.checkIn>=today;}).sort(function(a,b){return a.cancelDate<b.cancelDate?-1:1;}).slice(0,4);
+  if(cancels.length)h+='<div class="card"><h3>⏰ 취소 마감 임박</h3>'+cancels.map(function(c){var n=diffDays(today,c.cancelDate);return '<div class="row"><span>'+esc(c.name)+' <span class="mu">'+mdw(c.checkIn)+' 입실</span></span><b class="'+(n<=3?'warn':'')+'">'+mdw(c.cancelDate)+' '+ddayTxt(c.cancelDate)+'</b></div>';}).join('')+'</div>';
+  var ls=S.data.lessons;
+  h+='<div class="card"><h3>🎿 강습 잔여</h3>'+(ls.length?ls.map(function(l){var s=lessonStat(l),pct=l.total?Math.max(0,Math.min(100,Math.round(s.left/l.total*100))):0;return '<div class="row"><span>'+esc(l.vendor)+' <span class="mu">'+esc((l.who||[]).map(memberName).join('·'))+'</span></span><b>'+s.left+'/'+l.total+'회</b></div><div class="prog"><div style="width:'+pct+'%"></div></div>';}).join(''):'<div class="empty">등록된 강습권이 없어요</div>')+'</div>';
+  return h;
+}
+
+function viewCondo(){
+  var y0=seasonYear(),months=[[y0,12],[y0+1,1],[y0+1,2],[y0+1,3]];
+  if(!S.cal){var td=todayStr(),idx=0;months.forEach(function(m,i){if(td.slice(0,7)===m[0]+'-'+String(m[1]).padStart(2,'0'))idx=i;});S.cal=idx;}
+  var cm=months[S.cal],y=cm[0],m=cm[1],groups=groupCondos(S.data.condos),today=todayStr();
+  var h='<div class="pills">'+months.map(function(mm,i){return '<button data-cal="'+i+'" class="'+(i===S.cal?'on':'')+'">'+mm[1]+'월</button>';}).join('')+'</div>';
+  var first=Date.UTC(y,m-1,1),off=new Date(first).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate(),weeks=Math.ceil((off+dim)/7);
+  var mk=y+'-'+String(m).padStart(2,'0');
+  h+='<div class="cal"><div class="calhead"><span>'+y+'년 '+m+'월</span></div><div class="dow">'+DOW.map(function(d){return '<div>'+d+'</div>';}).join('')+'</div>';
+  for(var w=0;w<weeks;w++){
+    var ws=fromMs(first-off*864e5+w*7*864e5),we=addDays(ws,6),segs=[],ov=[0,0,0,0,0,0,0,0];
+    groups.forEach(function(g,gi){
+      if(g.start>we||g.end<ws)return;
+      var s=g.start>ws?g.start:ws,e=g.end<we?g.end:we;
+      segs.push({gi:gi,g:g,c1:diffDays(ws,s)+1,c2:diffDays(ws,e)+1,cl:g.start<ws,cr:g.end>we,lane:-1});
+    });
+    segs.sort(function(a,b){return a.c1-b.c1||(b.c2-b.c1)-(a.c2-a.c1);});
+    var lanes=[0,0,0];
+    segs.forEach(function(s){
+      for(var i=0;i<3;i++){if(lanes[i]<s.c1){lanes[i]=s.c2;s.lane=i;break;}}
+      if(s.lane<0)for(var c=s.c1;c<=s.c2;c++)ov[c]++;
+    });
+    h+='<div class="week">';
+    for(var i=0;i<7;i++){
+      var ds=addDays(ws,i),dd=Number(ds.slice(8,10)),out=ds.slice(0,7)!==mk;
+      h+='<div class="day'+(out?' out':'')+(i===0?' sun':i===6?' sat':'')+(ds===today?' today':'')+'" style="grid-column:'+(i+1)+'" data-day="'+ds+'"><span>'+dd+'</span>'+(ov[i+1]?'<em>+'+ov[i+1]+'</em>':'')+'</div>';
+    }
+    segs.forEach(function(s){
+      if(s.lane<0)return;
+      h+='<div class="bar'+(s.cl?' cl':'')+(s.cr?' cr':'')+'" style="grid-column:'+s.c1+'/'+(s.c2+1)+';grid-row:'+(s.lane+2)+';background:var(--c-'+(s.g.resort||'수기입력')+')" data-g="'+s.gi+'">'+esc(s.g.name)+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  S._groups=groups;
+  h+='<div class="card"><h3>예약 목록 <small>'+groups.length+'건 · '+won(sum(groups,'price'))+'</small></h3>'+(groups.length?groups.map(function(g,gi){
+    var cd=g.items.filter(function(c){return c.cancelDate&&c.cancelDate>=today;}).map(function(c){return c.cancelDate;}).sort()[0];
+    return '<div class="item" data-g="'+gi+'"><div><div class="t">'+esc(g.name)+'</div><div class="s">'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+(cd?' · <span class="'+(diffDays(today,cd)<=3?'warn':'')+'">취소마감 '+md(cd)+' '+ddayTxt(cd)+'</span>':'')+'</div></div><div class="r">'+resortChip(g)+'<div class="t">'+won(g.price)+'</div></div></div>';
+  }).join(''):'<div class="empty">달력의 날짜를 누르거나 + 버튼으로 예약을 추가하세요</div>')+'</div>';
+  return h+'<button class="fab" data-add="condo">+</button>';
+}
+function showGroup(g){
+  var h='<h2>'+esc(g.name)+'<button data-x="close">×</button></h2><div style="margin-bottom:10px">'+resortChip(g)+'<b>'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+'</b></div>'+
+    '<div class="row"><span>총 금액</span><b>'+won(g.price)+'</b></div>';
+  h+=g.items.map(function(c,i){
+    return '<div class="item" data-i="'+i+'"><div><div class="t">'+mdw(c.checkIn)+' → '+mdw(c.checkOut)+'</div><div class="s">'+esc([c.room,c.size].filter(Boolean).join(' · '))+(c.cancelDate?'<br>취소마감 '+mdw(c.cancelDate)+' '+ddayTxt(c.cancelDate):'')+(c.cancelRule?'<br>'+esc(c.cancelRule):'')+'</div></div><div class="r"><div class="t">'+won(c.price)+'</div><div class="s">'+esc(c.payer||'')+'</div></div></div>';
+  }).join('');
+  h+='<div class="acts"><button class="btn sub" data-x="more">이어서 예약 추가</button><button class="btn" data-x="close">닫기</button></div>';
+  var sh=openSheet(h);
+  sh.addEventListener('click',function(e){
+    var it=e.target.closest('.item');
+    if(it){condoForm(g.items[Number(it.dataset.i)]);return;}
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.x==='close')closeModal();
+    else if(b.dataset.x==='more'){var last=g.items[g.items.length-1];condoForm({resort:last.resort,resortEtc:last.resortEtc,name:last.name,room:last.room,size:last.size,payer:last.payer,checkIn:g.end,checkOut:addDays(g.end,1)});}
+  });
+}
+
+function viewLesson(){
+  var ms=members(false),h='<div class="card"><h3>대상자 <small>시즌마다 추가/제외</small></h3><div>'+
+    (ms.length?ms.map(function(m){return '<span class="chip" data-m="'+m.id+'" style="'+(m.active===false?'opacity:.45;text-decoration:line-through':'')+'">'+esc(m.name)+'</span>';}).join(''):'<span class="mu">대상자를 추가하세요</span>')+
+    ' <span class="chip" data-add="member" style="background:var(--ac);color:#fff">+ 추가</span></div></div>';
+  h+=S.data.lessons.length?S.data.lessons.map(function(l){
+    var s=lessonStat(l),pct=l.total?Math.max(0,Math.min(100,Math.round(s.left/l.total*100))):0;
+    return '<div class="card"><h3><span>'+esc(l.vendor)+' '+resortChip(l)+'</span><button class="chip" data-l="'+l.id+'">수정</button></h3>'+
+      '<div style="font-size:26px;font-weight:800;color:'+(s.left<=0?'var(--warn)':'var(--ac)')+'">'+s.left+'<span style="font-size:14px;color:var(--mu)"> / '+l.total+'회 남음</span></div><div class="prog"><div style="width:'+pct+'%"></div></div>'+
+      '<div class="row"><span class="mu">대상자</span><span>'+((l.who||[]).map(function(id){return esc(memberName(id))+' <span class="mu">'+(s.per[id]||0)+'회</span>';}).join(' · ')||'-')+'</span></div>'+
+      '<div class="row"><span class="mu">금액 · 결제</span><span>'+won(l.price)+' · '+esc(l.payer||'')+'</span></div>'+
+      '<div class="row"><span class="mu">차감 방식</span><span>'+esc(l.mode||MODES[0])+'</span></div>'+
+      (s.logs.length?'<div style="margin-top:6px">'+s.logs.map(function(g){return '<div class="item" data-g="'+g.id+'"><div><div class="t">'+mdw(g.date)+' '+esc(g.time||'')+'</div><div class="s">'+esc((g.who||[]).map(memberName).join('·')||'참여자 미선택')+(g.note?' · '+esc(g.note):'')+'</div></div><div class="r t">-'+g.count+'회</div></div>';}).join('')+'</div>':'')+
+      '<div class="acts" style="margin-top:10px"><button class="btn sub" data-log="'+l.id+'">+ 수강 기록</button></div></div>';
+  }).join(''):'<div class="empty">강습권을 추가하세요</div>';
+  return h+'<button class="fab" data-add="lesson">+</button>';
+}
+
+function viewGear(){
+  var g=S.data.gear.slice().sort(function(a,b){return a.date<b.date?1:-1;});
+  function by(t){return sum(g.filter(function(x){return x.type===t;}),'amount');}
+  var h='<div class="sum3"><div><small>구입</small><b>'+won(by('구입'))+'</b></div><div><small>렌탈</small><b>'+won(by('렌탈'))+'</b></div><div><small>전체</small><b>'+won(sum(g,'amount'))+'</b></div></div>';
+  h+='<div class="card">'+(g.length?g.map(function(x){return '<div class="item" data-gid="'+x.id+'"><div><div class="t">'+esc(x.item)+'</div><div class="s">'+mdw(x.date)+' · '+esc(x.shop||'')+' '+esc(x.note||'')+'</div></div><div class="r"><span class="chip">'+esc(x.type)+'</span><div class="t">'+won(x.amount)+'</div><div class="s">'+esc(x.payer||'')+'</div></div></div>';}).join(''):'<div class="empty">장비 구입·렌탈 이력을 추가하세요</div>')+'</div>';
+  return h+'<button class="fab" data-add="gear">+</button>';
+}
+
+function viewExp(){
+  var all=S.data.expenses,total=sum(all,'amount');
+  var h='<div class="card"><h3>항목별 <small>합계 '+won(total)+'</small></h3>'+EXP_CATS.map(function(c){var a=sum(all.filter(function(x){return x.cat===c;}),'amount'),p=total?Math.round(a/total*100):0;return a?'<div class="row"><span>'+c+' <span class="mu">'+p+'%</span></span><b>'+won(a)+'</b></div><div class="prog" style="margin:0 0 4px"><div style="width:'+p+'%"></div></div>':'';}).join('')+(total?'':'<div class="empty">아직 지출이 없어요</div>')+'</div>';
+  h+='<div class="pills">'+['전체'].concat(EXP_CATS).map(function(c){return '<button data-cat="'+c+'" class="'+(S.expCat===c?'on':'')+'">'+c+'</button>';}).join('')+'</div>';
+  var list=all.filter(function(x){return S.expCat==='전체'||x.cat===S.expCat;}).sort(function(a,b){return a.date<b.date?1:-1;});
+  h+='<div class="card">'+(list.length?list.map(function(x){return '<div class="item" data-eid="'+x.id+'"><div><div class="t">'+esc(x.cat)+(x.note?' · '+esc(x.note):'')+'</div><div class="s">'+mdw(x.date)+' · '+esc(resortName(x))+'</div></div><div class="r"><div class="t">'+won(x.amount)+'</div><div class="s">'+esc(x.payer||'')+'</div></div></div>';}).join(''):'<div class="empty">내역이 없어요</div>')+'</div>';
+  return h+'<button class="fab" data-add="exp">+</button>';
+}
+
+/* ===== 이벤트 ===== */
+function find(c,id){return S.data[c].filter(function(x){return x.id===id;})[0];}
+$('#view').addEventListener('click',function(e){
+  var t=e.target,el;
+  if((el=t.closest('[data-cal]'))){S.cal=Number(el.dataset.cal);render();return;}
+  if((el=t.closest('[data-cat]'))){S.expCat=el.dataset.cat;render();return;}
+  if((el=t.closest('[data-add]'))){var a=el.dataset.add;({condo:function(){condoForm({});},member:function(){memberForm({});},lesson:function(){lessonForm({});},gear:function(){gearForm({});},exp:function(){expForm({});}})[a]();return;}
+  if((el=t.closest('.bar,[data-g]'))&&S._groups&&el.dataset.g!==undefined&&S.tab==='condo'){showGroup(S._groups[Number(el.dataset.g)]);return;}
+  if((el=t.closest('[data-day]'))){condoForm({checkIn:el.dataset.day,checkOut:addDays(el.dataset.day,1)});return;}
+  if((el=t.closest('[data-m]'))){memberForm(find('members',el.dataset.m));
+    return;}
+  if((el=t.closest('[data-l]'))){lessonForm(find('lessons',el.dataset.l));return;}
+  if((el=t.closest('[data-log]'))){logForm({},find('lessons',el.dataset.log));return;}
+  if(S.tab==='lesson'&&(el=t.closest('[data-g]'))){var g=find('logs',el.dataset.g);logForm(g,find('lessons',g.lessonId));return;}
+  if((el=t.closest('[data-gid]'))){gearForm(find('gear',el.dataset.gid));return;}
+  if((el=t.closest('[data-eid]'))){expForm(find('expenses',el.dataset.eid));return;}
+});
+document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('click',function(){S.tab=b.dataset.t;render();window.scrollTo(0,0);});});
+$('#seasonSel').addEventListener('change',function(e){switchSeason(e.target.value);});
+
+/* ===== 메뉴 / 새 시즌 / 엑셀 ===== */
+$('#menuBtn').addEventListener('click',function(){
+  var sh=openSheet('<h2>메뉴<button data-x="close">×</button></h2><div class="acts" style="flex-direction:column"><button class="btn sub" data-x="export">📥 엑셀(xlsx) 내보내기</button><button class="btn sub" data-x="newseason">➕ 새 시즌 만들기</button><button class="btn red" data-x="logout">로그아웃</button></div>');
+  sh.addEventListener('click',function(e){
+    var x=e.target.dataset.x;if(!x)return;
+    if(x==='close')closeModal();
+    else if(x==='export'){closeModal();exportXlsx();}
+    else if(x==='logout'){closeModal();if(confirm('로그아웃 할까요?'))firebase.auth().signOut();}
+    else if(x==='newseason'){
+      closeModal();
+      openForm({title:'새 시즌 만들기',isNew:true,data:{name:''},fields:[{k:'name',label:'시즌 (예: 2728)',t:'text',ph:'2728'}],
+        valid:function(v){return /^\d{4}$/.test(v.name||'')?(S.seasons.indexOf(v.name)>=0?'이미 있는 시즌이에요':''):'숫자 4자리로 입력하세요 (예: 2728)';},
+        onSave:function(v){db.collection('seasons').doc(v.name).set({name:v.name,created:Date.now()}).then(function(){switchSeason(v.name);});}});
+    }
+  });
+});
+function exportXlsx(){
+  var d=S.data,t=totals(),wb=XLSX.utils.book_new();
+  function sheet(name,rows){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{'내용':'없음'}]),name);}
+  sheet('요약',[{'항목':'콘도','금액':t.condo},{'항목':'강습','금액':t.lesson},{'항목':'장비','금액':t.gear},{'항목':'지출(먹거리 등)','금액':t.exp},{'항목':'총합','금액':t.all},{'항목':'른이 결제','금액':t.payer['른이']},{'항목':'순이 결제','금액':t.payer['순이']}]);
+  sheet('콘도',d.condos.slice().sort(function(a,b){return a.checkIn<b.checkIn?-1:1;}).map(function(c){return {'스키장':resortName(c),'콘도명':c.name,'룸타입':c.room||'','평형':c.size||'','체크인':c.checkIn,'체크아웃':c.checkOut,'박수':diffDays(c.checkIn,c.checkOut),'가격':Number(c.price)||0,'결제자':c.payer||'','취소마감일':c.cancelDate||'','취소규정':c.cancelRule||''};}));
+  sheet('강습권',d.lessons.map(function(l){var s=lessonStat(l);return {'업체':l.vendor,'스키장':resortName(l),'대상자':(l.who||[]).map(memberName).join(', '),'총횟수':l.total,'사용':s.used,'잔여':s.left,'차감방식':l.mode||'','금액':Number(l.price)||0,'결제자':l.payer||'','메모':l.note||''};}));
+  sheet('강습기록',d.logs.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(g){var l=find('lessons',g.lessonId)||{};return {'날짜':g.date,'시간':g.time||'','업체':l.vendor||'','참여자':(g.who||[]).map(memberName).join(', '),'차감횟수':g.count,'메모':g.note||''};}));
+  sheet('장비',d.gear.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(x){return {'날짜':x.date,'구분':x.type,'품목':x.item,'금액':Number(x.amount)||0,'결제자':x.payer||'','구입/렌탈처':x.shop||'','메모':x.note||''};}));
+  sheet('지출',d.expenses.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(x){return {'날짜':x.date,'항목':x.cat,'스키장':resortName(x),'금액':Number(x.amount)||0,'결제자':x.payer||'','메모':x.note||''};}));
+  XLSX.writeFile(wb,'skiski_'+S.season+'시즌.xlsx');
+}
+
+/* ===== 로그인 ===== */
+$('#lform').addEventListener('submit',function(e){
+  e.preventDefault();$('#lerr').textContent='';$('#lbtn').disabled=true;
+  firebase.auth().signInWithEmailAndPassword($('#lemail').value.trim(),$('#lpw').value).catch(function(err){
+    var m={'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않아요.','auth/wrong-password':'이메일 또는 비밀번호가 올바르지 않아요.','auth/user-not-found':'이메일 또는 비밀번호가 올바르지 않아요.','auth/invalid-email':'이메일 형식이 올바르지 않아요.','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 시도해주세요.','auth/network-request-failed':'네트워크 연결을 확인해주세요.'};
+    $('#lerr').textContent=m[err.code]||('로그인 실패 ('+(err.code||'unknown')+')');
+  }).finally(function(){$('#lbtn').disabled=false;});
+});
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){}).then(function(){
+  firebase.auth().onAuthStateChanged(function(user){
+    if(user){
+      $('#login').classList.add('hidden');$('#app').classList.remove('hidden');$('#nav').classList.remove('hidden');
+      $('#lform').reset();startApp();
+    }else{
+      $('#login').classList.remove('hidden');$('#app').classList.add('hidden');$('#nav').classList.add('hidden');closeModal();stopApp();
+    }
+  });
+});
+</script>
+</body>
+</html>
