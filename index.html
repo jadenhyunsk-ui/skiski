@@ -322,6 +322,10 @@ function openForm(o){
 }
 
 /* ===== 콘도 그룹핑 (같은 콘도 연박 합치기) ===== */
+function timeTxt(g){
+  var a=g.items[0].inTime,b=g.items[g.items.length-1].outTime;
+  return (a||b)?' · 입실 '+(a||'-')+' / 퇴실 '+(b||'-'):'';
+}
 function groupCondos(list){
   var by={};
   list.forEach(function(c){if(!c.checkIn||!c.checkOut)return;var k=resortName(c)+'|'+(c.name||'').trim();(by[k]=by[k]||[]).push(c);});
@@ -352,6 +356,7 @@ function condoForm(c){
       {k:'room',label:'룸타입',t:'text',ph:'예) 디럭스 온돌'},
       {k:'size',label:'평형',t:'text',ph:'예) 24평'},
       {k:'checkIn',label:'체크인',t:'date'},{k:'checkOut',label:'체크아웃',t:'date'},
+      {k:'inTime',label:'입실 시간 (선택)',t:'time'},{k:'outTime',label:'퇴실 시간 (선택)',t:'time'},
       {k:'price',label:'가격(원)',t:'number'},{k:'payDate',label:'결제일',t:'date'},payerField(),
       {k:'cancelDate',label:'취소 마감일 (선택, D-day 알림용)',t:'date'},
       {k:'cancelRule',label:'취소 규정',t:'area',ph:'예) 3일 전까지 무료, 이후 50%'},
@@ -510,7 +515,7 @@ function viewCondo(){
   S._groups=groups;
   h+='<div class="card"><h3>예약 목록 <small>'+groups.length+'건 · '+won(sum(groups,'price'))+'</small></h3>'+(groups.length?groups.map(function(g,gi){
     var cd=g.items.filter(function(c){return c.cancelDate&&c.cancelDate>=today;}).map(function(c){return c.cancelDate;}).sort()[0];
-    return '<div class="item" data-g="'+gi+'"><div><div class="t">'+esc(g.name)+'</div><div class="s">'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+(cd?' · <span class="'+(diffDays(today,cd)<=3?'warn':'')+'">취소마감 '+md(cd)+' '+ddayTxt(cd)+'</span>':'')+'</div></div><div class="r">'+resortChip(g)+'<div class="t">'+won(g.price)+'</div></div></div>';
+    return '<div class="item" data-g="'+gi+'"><div><div class="t">'+esc(g.name)+'</div><div class="s">'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+timeTxt(g)+(cd?' · <span class="'+(diffDays(today,cd)<=3?'warn':'')+'">취소마감 '+md(cd)+' '+ddayTxt(cd)+'</span>':'')+'</div></div><div class="r">'+resortChip(g)+'<div class="t">'+won(g.price)+'</div></div></div>';
   }).join(''):'<div class="empty">달력의 날짜를 누르거나 + 버튼으로 예약을 추가하세요</div>')+'</div>';
   return h+'<button class="fab" data-add="condo">+</button>';
 }
@@ -519,8 +524,17 @@ function parseSms(t){
   function g(re){var m=t.match(re);return m?m[1].trim():'';}
   var no=g(/예약번호\s*[:：]\s*(\S+)/),room=g(/예약객실\s*[:：]\s*(.+)/),info=g(/입실정보\s*[:：]\s*(.+)/);
   var dm=info.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
-  var pad=function(n){return String(n).padStart(2,'0');},size='',checkIn,nights,rooms;
-  if(no&&dm){
+  var pad=function(n){return String(n).padStart(2,'0');},size='',checkIn,checkOut,nights,rooms;
+  var inD=g(/입실일자\s*[:：]\s*(.+)/),outD=g(/퇴실일자\s*[:：]\s*(.+)/),cname='',inTime='',outTime='',ctype='';
+  var dIn=inD.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/),dOut=outD.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
+  if(no&&dIn&&dOut){
+    /* 하이원 형식: 입실일자/퇴실일자/객실타입/입실~퇴실 */
+    checkIn=dIn[1]+'-'+pad(dIn[2])+'-'+pad(dIn[3]);checkOut=dOut[1]+'-'+pad(dOut[2])+'-'+pad(dOut[3]);
+    nights=diffDays(checkIn,checkOut);rooms=1;
+    room=g(/객실타입\s*[:：]\s*(.+)/);cname=g(/예약확인\s*\]\s*(.+)/);
+    var tm=t.match(/입실\s*~\s*퇴실\s*[:：]\s*(?:(\S+?)\s*[:：]\s*)?(\d{1,2}:\d{2})\s*~\s*(\d{1,2}:\d{2})/);
+    if(tm){inTime=pad(tm[2].split(':')[0])+':'+tm[2].split(':')[1];outTime=pad(tm[3].split(':')[0])+':'+tm[3].split(':')[1];if(tm[1])ctype=tm[1];}
+  }else if(no&&dm){
     checkIn=dm[1]+'-'+pad(dm[2])+'-'+pad(dm[3]);
     var nm=info.match(/(\d+)\s*박/),rm=info.match(/(\d+)\s*실/);nights=nm?Number(nm[1]):1;rooms=rm?Number(rm[1]):1;
   }else{
@@ -531,8 +545,8 @@ function parseSms(t){
   }
   var resort=/웰리힐리/.test(t)?'웰리힐리':/하이원/.test(t)?'하이원':/용평/.test(t)?'용평':'수기입력';
   var cm=t.match(/입실일\s*제외\s*(\d+)\s*일\s*전/),days=cm?Number(cm[1]):(resort==='웰리힐리'?7:0);
-  var o={resort:resort,name:{웰리힐리:'웰리힐리파크',하이원:'하이원',용평:'용평'}[resort]||'',room:room,size:size,checkIn:checkIn,checkOut:addDays(checkIn,nights),
-    memo:'예약번호 '+no+(rooms>1?' · '+rooms+'실':'')};
+  var o={resort:resort,name:cname||{웰리힐리:'웰리힐리파크',하이원:'하이원',용평:'용평'}[resort]||'',room:room,size:size,checkIn:checkIn,checkOut:checkOut||addDays(checkIn,nights),inTime:inTime,outTime:outTime,
+    memo:'예약번호 '+no+(ctype?' · '+ctype:'')+(rooms>1?' · '+rooms+'실':'')};
   if(days){o.cancelDate=addDays(checkIn,-days);o.cancelRule='입실일 제외 '+days+'일 전까지 취소/변경 ('+md(o.cancelDate)+'까지)';}
   return o;
 }
@@ -549,10 +563,10 @@ function smsSheet(){
   });
 }
 function showGroup(g){
-  var h='<h2>'+esc(g.name)+'<button data-x="close">×</button></h2><div style="margin-bottom:10px">'+resortChip(g)+'<b>'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+'</b></div>'+
+  var h='<h2>'+esc(g.name)+'<button data-x="close">×</button></h2><div style="margin-bottom:10px">'+resortChip(g)+'<b>'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+timeTxt(g)+'</b></div>'+
     '<div class="row"><span>총 금액</span><b>'+won(g.price)+'</b></div>';
   h+=g.items.map(function(c,i){
-    return '<div class="item" data-i="'+i+'"><div><div class="t">'+mdw(c.checkIn)+' → '+mdw(c.checkOut)+'</div><div class="s">'+esc([c.room,c.size].filter(Boolean).join(' · '))+(c.cancelDate?'<br>취소마감 '+mdw(c.cancelDate)+' '+ddayTxt(c.cancelDate):'')+(c.cancelRule?'<br>'+esc(c.cancelRule):'')+(c.memo?'<br>'+esc(c.memo):'')+'</div></div><div class="r"><div class="t">'+won(c.price)+'</div><div class="s">'+esc(c.payer||'')+'</div></div></div>';
+    return '<div class="item" data-i="'+i+'"><div><div class="t">'+mdw(c.checkIn)+' → '+mdw(c.checkOut)+(c.inTime||c.outTime?' <span class="mu">'+(c.inTime?'입실 '+c.inTime:'')+(c.outTime?' 퇴실 '+c.outTime:'')+'</span>':'')+'</div><div class="s">'+esc([c.room,c.size].filter(Boolean).join(' · '))+(c.cancelDate?'<br>취소마감 '+mdw(c.cancelDate)+' '+ddayTxt(c.cancelDate):'')+(c.cancelRule?'<br>'+esc(c.cancelRule):'')+(c.memo?'<br>'+esc(c.memo):'')+'</div></div><div class="r"><div class="t">'+won(c.price)+'</div><div class="s">'+esc(c.payer||'')+'</div></div></div>';
   }).join('');
   h+='<div class="acts"><button class="btn sub" data-x="more">이어서 예약 추가</button><button class="btn" data-x="close">닫기</button></div>';
   var sh=openSheet(h);
@@ -669,7 +683,7 @@ function exportXlsx(){
   function sheet(name,rows){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{'내용':'없음'}]),name);}
   sheet('요약',[{'항목':'콘도','금액':t.condo},{'항목':'강습','금액':t.lesson},{'항목':'장비','금액':t.gear},{'항목':'지출(먹거리 등)','금액':t.exp},{'항목':'총합','금액':t.all},{'항목':'른이 결제','금액':t.payer['른이']},{'항목':'순이 결제','금액':t.payer['순이']}]);
   sheet('전체지출',allSpend().sort(function(a,b){return (a.date||'9')<(b.date||'9')?-1:1;}).map(function(x){return {'날짜':x.date,'카테고리':x.cat,'내용':x.title,'스키장':x.resort,'금액':x.amount,'결제자':x.payer||''};}));
-  sheet('콘도',d.condos.slice().sort(function(a,b){return a.checkIn<b.checkIn?-1:1;}).map(function(c){return {'스키장':resortName(c),'콘도명':c.name,'룸타입':c.room||'','평형':c.size||'','체크인':c.checkIn,'체크아웃':c.checkOut,'결제일':c.payDate||'','박수':diffDays(c.checkIn,c.checkOut),'가격':Number(c.price)||0,'결제자':c.payer||'','취소마감일':c.cancelDate||'','취소규정':c.cancelRule||'','메모':c.memo||''};}));
+  sheet('콘도',d.condos.slice().sort(function(a,b){return a.checkIn<b.checkIn?-1:1;}).map(function(c){return {'스키장':resortName(c),'콘도명':c.name,'룸타입':c.room||'','평형':c.size||'','체크인':c.checkIn,'체크아웃':c.checkOut,'입실시간':c.inTime||'','퇴실시간':c.outTime||'','결제일':c.payDate||'','박수':diffDays(c.checkIn,c.checkOut),'가격':Number(c.price)||0,'결제자':c.payer||'','취소마감일':c.cancelDate||'','취소규정':c.cancelRule||'','메모':c.memo||''};}));
   sheet('강습권',d.lessons.map(function(l){var s=lessonStat(l);return {'업체':l.vendor,'스키장':resortName(l),'대상자':(l.who||[]).map(memberName).join(', '),'총횟수':l.total,'사용':s.used,'잔여':s.left,'차감방식':l.mode||'','금액':Number(l.price)||0,'결제자':l.payer||'','메모':l.note||''};}));
   sheet('강습기록',d.logs.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(g){var l=find('lessons',g.lessonId)||{};return {'날짜':g.date,'시간':g.time||'','업체':l.vendor||'','참여자':(g.who||[]).map(memberName).join(', '),'차감횟수':g.count,'메모':g.note||''};}));
   sheet('장비',d.gear.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(x){return {'날짜':x.date,'구분':x.type,'품목':x.item,'금액':Number(x.amount)||0,'결제자':x.payer||'','구입/렌탈처':x.shop||'','메모':x.note||''};}));
