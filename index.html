@@ -519,13 +519,19 @@ function parseSms(t){
   function g(re){var m=t.match(re);return m?m[1].trim():'';}
   var no=g(/예약번호\s*[:：]\s*(\S+)/),room=g(/예약객실\s*[:：]\s*(.+)/),info=g(/입실정보\s*[:：]\s*(.+)/);
   var dm=info.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
-  if(!no||!dm)return null;
-  var pad=function(n){return String(n).padStart(2,'0');};
-  var checkIn=dm[1]+'-'+pad(dm[2])+'-'+pad(dm[3]);
-  var nm=info.match(/(\d+)\s*박/),rm=info.match(/(\d+)\s*실/),nights=nm?Number(nm[1]):1,rooms=rm?Number(rm[1]):1;
+  var pad=function(n){return String(n).padStart(2,'0');},size='',checkIn,nights,rooms;
+  if(no&&dm){
+    checkIn=dm[1]+'-'+pad(dm[2])+'-'+pad(dm[3]);
+    var nm=info.match(/(\d+)\s*박/),rm=info.match(/(\d+)\s*실/);nights=nm?Number(nm[1]):1;rooms=rm?Number(rm[1]):1;
+  }else{
+    /* 짧은 형식: 27/01/0117평 1실 2박 예약완료 NO.Y21060 (날짜 YY/MM/DD 바로 뒤에 평형) */
+    var sm=t.match(/(\d{2})\/(\d{2})\/(\d{2})(\d{1,3})\s*평\s*(\d+)\s*실\s*(\d+)\s*박[\s\S]*?NO\.?\s*([A-Za-z0-9]+)/);
+    if(!sm)return null;
+    checkIn='20'+sm[1]+'-'+sm[2]+'-'+sm[3];size=sm[4]+'평';rooms=Number(sm[5]);nights=Number(sm[6]);no=sm[7];
+  }
   var resort=/웰리힐리/.test(t)?'웰리힐리':/하이원/.test(t)?'하이원':/용평/.test(t)?'용평':'수기입력';
   var cm=t.match(/입실일\s*제외\s*(\d+)\s*일\s*전/),days=cm?Number(cm[1]):(resort==='웰리힐리'?7:0);
-  var o={resort:resort,name:{웰리힐리:'웰리힐리파크',하이원:'하이원',용평:'용평'}[resort]||'',room:room,checkIn:checkIn,checkOut:addDays(checkIn,nights),
+  var o={resort:resort,name:{웰리힐리:'웰리힐리파크',하이원:'하이원',용평:'용평'}[resort]||'',room:room,size:size,checkIn:checkIn,checkOut:addDays(checkIn,nights),
     memo:'예약번호 '+no+(rooms>1?' · '+rooms+'실':'')};
   if(days){o.cancelDate=addDays(checkIn,-days);o.cancelRule='입실일 제외 '+days+'일 전까지 취소/변경 ('+md(o.cancelDate)+'까지)';}
   return o;
