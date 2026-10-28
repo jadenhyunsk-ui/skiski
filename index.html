@@ -478,7 +478,7 @@ function viewCondo(){
   var y0=seasonYear(),months=[[y0,12],[y0+1,1],[y0+1,2],[y0+1,3]];
   if(!S.cal){var td=todayStr(),idx=0;months.forEach(function(m,i){if(td.slice(0,7)===m[0]+'-'+String(m[1]).padStart(2,'0'))idx=i;});S.cal=idx;}
   var cm=months[S.cal],y=cm[0],m=cm[1],groups=groupCondos(S.data.condos),today=todayStr();
-  var h='<div class="pills">'+months.map(function(mm,i){return '<button data-cal="'+i+'" class="'+(i===S.cal?'on':'')+'">'+mm[1]+'월</button>';}).join('')+'</div>';
+  var h='<div class="pills"><button data-sms="1" style="background:var(--ac2);color:#fff">📩 문자로 추가</button></div><div class="pills">'+months.map(function(mm,i){return '<button data-cal="'+i+'" class="'+(i===S.cal?'on':'')+'">'+mm[1]+'월</button>';}).join('')+'</div>';
   var first=Date.UTC(y,m-1,1),off=new Date(first).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate(),weeks=Math.ceil((off+dim)/7);
   var mk=y+'-'+String(m).padStart(2,'0');
   h+='<div class="cal"><div class="calhead"><span>'+y+'년 '+m+'월</span></div><div class="dow">'+DOW.map(function(d){return '<div>'+d+'</div>';}).join('')+'</div>';
@@ -513,6 +513,34 @@ function viewCondo(){
     return '<div class="item" data-g="'+gi+'"><div><div class="t">'+esc(g.name)+'</div><div class="s">'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+(cd?' · <span class="'+(diffDays(today,cd)<=3?'warn':'')+'">취소마감 '+md(cd)+' '+ddayTxt(cd)+'</span>':'')+'</div></div><div class="r">'+resortChip(g)+'<div class="t">'+won(g.price)+'</div></div></div>';
   }).join(''):'<div class="empty">달력의 날짜를 누르거나 + 버튼으로 예약을 추가하세요</div>')+'</div>';
   return h+'<button class="fab" data-add="condo">+</button>';
+}
+/* ===== 예약 문자 파싱 (웰리힐리 형식 기준, 하이원/용평은 같은 라벨이면 인식) ===== */
+function parseSms(t){
+  function g(re){var m=t.match(re);return m?m[1].trim():'';}
+  var no=g(/예약번호\s*[:：]\s*(\S+)/),room=g(/예약객실\s*[:：]\s*(.+)/),info=g(/입실정보\s*[:：]\s*(.+)/);
+  var dm=info.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
+  if(!no||!dm)return null;
+  var pad=function(n){return String(n).padStart(2,'0');};
+  var checkIn=dm[1]+'-'+pad(dm[2])+'-'+pad(dm[3]);
+  var nm=info.match(/(\d+)\s*박/),rm=info.match(/(\d+)\s*실/),nights=nm?Number(nm[1]):1,rooms=rm?Number(rm[1]):1;
+  var resort=/웰리힐리/.test(t)?'웰리힐리':/하이원/.test(t)?'하이원':/용평/.test(t)?'용평':'수기입력';
+  var cm=t.match(/입실일\s*제외\s*(\d+)\s*일\s*전/),days=cm?Number(cm[1]):(resort==='웰리힐리'?7:0);
+  var o={resort:resort,name:{웰리힐리:'웰리힐리파크',하이원:'하이원',용평:'용평'}[resort]||'',room:room,checkIn:checkIn,checkOut:addDays(checkIn,nights),
+    memo:'예약번호 '+no+(rooms>1?' · '+rooms+'실':'')};
+  if(days){o.cancelDate=addDays(checkIn,-days);o.cancelRule='입실일 제외 '+days+'일 전까지 취소/변경 ('+md(o.cancelDate)+'까지)';}
+  return o;
+}
+function smsSheet(){
+  var sh=openSheet('<h2>문자로 예약 추가<button data-x="close">×</button></h2><div class="f"><label>예약 문자를 붙여넣으세요 (금액은 다음 화면에서 입력)</label><textarea id="smsTx" style="min-height:170px"></textarea></div><div class="stat e" id="smsErr"></div><div class="acts"><button class="btn" data-x="go">분석해서 추가</button></div>');
+  sh.addEventListener('click',function(e){
+    var x=e.target.dataset.x;if(!x)return;
+    if(x==='close'){closeModal();return;}
+    var o=parseSms($('#smsTx').value);
+    if(!o){$('#smsErr').textContent='⚠ 예약번호/입실정보를 찾지 못했어요. 문자 전체를 붙여넣었는지 확인하세요.';return;}
+    var no=o.memo.split(' ')[1];
+    if(S.data.condos.some(function(c){return (c.memo||'').indexOf(no)>=0;})&&!confirm('예약번호 '+no+'는 이미 등록돼 있어요. 그래도 추가할까요?'))return;
+    closeModal();condoForm(o);
+  });
 }
 function showGroup(g){
   var h='<h2>'+esc(g.name)+'<button data-x="close">×</button></h2><div style="margin-bottom:10px">'+resortChip(g)+'<b>'+mdw(g.start)+' ~ '+mdw(g.end)+' · '+nightsTxt(g.nights)+'</b></div>'+
@@ -596,6 +624,7 @@ function find(c,id){return S.data[c].filter(function(x){return x.id===id;})[0];}
 $('#view').addEventListener('click',function(e){
   var t=e.target,el;
   if((el=t.closest('[data-sp]'))){var sp=el.dataset.sp.split('|');({condos:condoForm,lessons:lessonForm,gear:gearForm,expenses:expForm})[sp[0]](find(sp[0],sp[1]));return;}
+  if(t.closest('[data-sms]')){smsSheet();return;}
   if((el=t.closest('[data-vw]'))){S.expView=el.dataset.vw;render();return;}
   if((el=t.closest('[data-cal]'))){S.cal=Number(el.dataset.cal);render();return;}
   if((el=t.closest('[data-cat]'))){S.expCat=el.dataset.cat;render();return;}
